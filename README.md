@@ -50,3 +50,5 @@ ALTER TABLE `votes`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_vote` (`movie_id`,`session_id`); 
 ```
+
+Copy `config.sample.php` to `config.php`. Update `config.php` with your database credentials
