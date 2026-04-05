@@ -309,4 +309,13 @@ class Database {
             throw new InvalidArgumentException("Query must use named parameters.");
         }
     }
+
+    /**
+     * Execute a write query (INSERT/UPDATE/DELETE with expressions)
+     */
+    public function execute(string $sql, array $params = []): bool
+    {
+        $stmt = $this->connection->prepare($sql);
+        return $stmt->execute($params);
+    }
 }
