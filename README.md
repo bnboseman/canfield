@@ -35,6 +35,7 @@ INSERT INTO `movies` (`title`, `description`, `image_link`, `created_at`) VALUES
 ('Forest Gump', 'The story of a simple man who unintentionally influences several decades of American history through his extraordinary life journey.', 'images/forest_gump.jpg', '2026-04-04 11:59:33');
 
 CREATE TABLE `votes` (
+  `id` int NOT NULL,
   `movie_id` int NOT NULL,
   `vote_type` tinyint NOT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
