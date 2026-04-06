@@ -3,5 +3,6 @@ return [
     'host' => 'localhost',
     'dbname' => 'database',
     'user' => 'user',
-    'password' => 'password'
+    'password' => 'password',
+    'cooldown' => 30,
 ];
