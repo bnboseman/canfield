@@ -168,12 +168,12 @@ class Database {
      * @param string $table
      * @param array $conditions
      * @return bool
-     * @throws Exception
+     * @throws InvalidArgumentException
      */
     public function delete(string $table, array $conditions): bool
     {
         if (empty($conditions)) {
-            throw new Exception("Delete requires conditions.");
+            throw new InvalidArgumentException("Delete requires conditions.");
         }
 
         $this->validateData($table, $conditions);
