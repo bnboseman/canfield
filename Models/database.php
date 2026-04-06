@@ -86,14 +86,19 @@ class Database {
      *
      * @param string $table Table Name
      * @param array $conditions Optional WHERE conditions (column => value)
+     * @param string $orderBy Column name to sort by
+     * @param string $direction Either ASC or DESC
      * @return array Result set as associative arrays
      *
-     * @throws InvalidArgumentException if table or columns names are invalid
+     * @throws InvalidArgumentException if table, columns, or orderBy names are invalid
      * @throws PDOException If query fails
      */
     public function select(string $table, array $conditions = [], ?string $orderBy = null, string $direction = 'ASC'): array
     {
         $this->validateData($table, $conditions);
+        if ($orderBy !== null && !$this->isValidTableName($orderBy)) {
+            throw new InvalidArgumentException('Invalid orderBy column');
+        }
 
         $sql = "SELECT * FROM {$table}";
         $params = [];
