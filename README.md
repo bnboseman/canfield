@@ -14,7 +14,21 @@ between the votes table and aggregated movie vote counts.
 
 Validation is implemented on both the client and server side. The API ensures that only 
 valid vote values (1 or -1) are accepted, prevents duplicate voting per session, and enforces 
-a cooldown period to avoid abuse.
+a cooldown period to avoid abuse. Cooldown timer can be set on the backend in the config.php file.
+
+Each vote is uniquely constrained by a combination of movie_id and session_id.
+This ensures that a user (per session) can only have one active vote per movie.
+
+If a user votes again on the same movie, the existing vote is updated rather than inserting a new record.
+
+The application includes error handling for invalid input, duplicate voting attempts, and server-side failures, 
+ensuring a consistent user experience.
+
+The seeding script generates a unique session_id for each vote to comply with the database constraint 
+on (movie_id, session_id). It performs destructive operations (dropping and recreating tables) and is 
+intended strictly for local development.
+
+**It should not be included or executed in a production environment.**
 
 Database transactions are used when updating votes to ensure consistency between the 
 votes table and aggregated movie vote counts.
