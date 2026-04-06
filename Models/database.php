@@ -276,4 +276,8 @@ class Database {
     {
         return $this->connection->rollBack();
     }
+
+    public function getConnection() {
+        return $this->connection;
+    }
 }

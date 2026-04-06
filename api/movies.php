@@ -46,7 +46,7 @@ switch ($method) {
             $movie_id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
             $vote_value = filter_input(INPUT_POST, 'vote_type', FILTER_VALIDATE_INT);
 
-            if ($movie_id === false || $vote_value === false || empty($movie_id) || empty($vote_value)) {
+            if (!is_int($movie_id) || !is_int($vote_value)) {
                 throw new InvalidArgumentException('Invalid input');
             }
 

@@ -127,7 +127,7 @@ class Vote
 
         // If the vote is the same, we don't have to do anything
         if ($existing->vote_type === $this->vote_type) {
-            return false;
+            throw new RuntimeException('Vote already set');
         }
 
         $this->db->beginTransaction();

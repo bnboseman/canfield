@@ -182,9 +182,25 @@ $(function () {
                 }
             },
             error: function (response) {
-                console.error(response.responseJSON);
-                showError(response.responseJSON.error);
-                container.removeClass('disabled');
+                    console.error(response);
+
+                    let message = 'Something went wrong';
+
+                    if (response.responseJSON && response.responseJSON.error) {
+                        message = response.responseJSON.error;
+                    } else if (response.responseText) {
+                        try {
+                            const parsed = JSON.parse(response.responseText);
+                            if (parsed.error) {
+                                message = parsed.error;
+                            }
+                        } catch (e) {
+                            message = response.responseText;
+                        }
+                    }
+
+                    showError(message);
+                    container.removeClass('disabled');
             }
         })
     });

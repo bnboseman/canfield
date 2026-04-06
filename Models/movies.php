@@ -184,7 +184,7 @@ class Movie
 
         $this->upvotes++;
 
-        return $sucess;
+        return $success;
     }
 
     /**
