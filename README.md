@@ -1,22 +1,32 @@
-# Canfield Scientific Inc Test
+# Canfield Scientific, Inc Test
 
 Single page web application that touches on database, PHP, HTML/CSS
 and JavaScript/jQuery/AJAX. Displays a small set of movies pulled from
 a MySQL database, each with title, description and thumbs up/down count totals.
 Movies can be up/down voted and stored in the database.
-The votes should be submitted via AJAX to a middleware layer.
+Votes are submitted via AJAX to a PHP API endpoint, which acts as a 
+middleware layer between the client and the database.
 
 The database is accessed using an instance of a PHP class that manages
 the connection and provides methods for accessing the movie table.
-Initial page load is from JavaScript
+Database transactions are used when updating votes to ensure consistency
+between the votes table and aggregated movie vote counts.
+
+Validation is implemented on both the client and server side. The API ensures that only 
+valid vote values (1 or -1) are accepted, prevents duplicate voting per session, and enforces 
+a cooldown period to avoid abuse.
+
+Database transactions are used when updating votes to ensure consistency between the 
+votes table and aggregated movie vote counts.
 
 Developed by B. Nichole Boseman
 
 ## Initial Setup
 
-You can either run a seeding script by going to the migration directoring and running
-`php seed.php` which will drp existing user and vote tables and populate votes with
-Create SQL Tables
+You can run the seeding script by navigating to the migrations directory and running:
+`php seed.php`
+
+This will drop existing movie and vote tables, recreate them, and populate the database.
 
 ```
 -- Movies table
@@ -74,12 +84,12 @@ UPDATE movies m
     LEFT JOIN (
     SELECT
     movie_id,
-    SUM (CASE WHEN vote_type = 1 THEN 1 ELSE 0 END) AS upvotes,
-    SUM (CASE WHEN vote_type = -1 THEN 1 ELSE 0 END) AS downvotes
+    SUM(CASE WHEN vote_type = 1 THEN 1 ELSE 0 END) AS upvotes,
+    SUM(CASE WHEN vote_type = -1 THEN 1 ELSE 0 END) AS downvotes
     FROM votes
     GROUP BY movie_id
-    ) v
-ON m.id = v.movie_id
+    ) v ON m.id = v.movie_id
     SET
-        m.upvotes = COALESCE (v.upvotes, 0), m.downvotes = COALESCE (v.downvotes, 0);
+        m.upvotes = COALESCE(v.upvotes, 0),
+        m.downvotes = COALESCE(v.downvotes, 0);
 ```

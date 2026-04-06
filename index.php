@@ -7,7 +7,7 @@
 
     <title>Movie Upvote Test</title>
 
-    <link rel="stylesheet" href="css/style.css?v=6">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
@@ -27,6 +27,6 @@
         src="https://code.jquery.com/jquery-4.0.0.min.js"
         integrity="sha256-OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao="
         crossorigin="anonymous"></script>
-<script src="/js/script.js?v=4"></script>
+<script src="/js/script.js"></script>
 </body>
 </html>
