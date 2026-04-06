@@ -28,10 +28,10 @@ class Vote
     public int $id;
     public int $movie_id;
     public int $vote_type;
-    public string $ip_address;
+    public ?string $ip_address = null;
     public string $session_id;
-    public $created_at;
-    public $updated_at;
+    public ?string $created_at = null;
+    public ?string $updated_at = null;
 
     public function __construct(array $data = [])
     {
@@ -43,6 +43,10 @@ class Vote
     }
 
 
+    /**
+     * @param array $data
+     * @return void
+     */
     private function fill(array $data): void
     {
         foreach ($data as $key => $value) {
@@ -67,49 +71,55 @@ class Vote
         }
     }
 
-
     /**
-     * Find Votes for single movie
+     * Saves new model to database
+     * @return Vote
      */
-    public static function findMovieVotes(int $movie_id): array
+    public function create(): self
     {
-        $db = Database::instance();
-
-        $results = $db->select(self::table(), ['movie_id' => $movie_id] );
-        $votes = [];
-        foreach ($results as $result) {
-            $votes[] = new Vote($result);
-        }
-        return $votes;
-    }
-
-    public function create(): string
-    {
-        return $this->db->insert(self::TABLE, [
+        $id = $this->db->insert(self::TABLE, [
             'movie_id' => $this->movie_id,
             'vote_type' => $this->vote_type,
             'ip_address' => $this->ip_address,
             'session_id' => $this->session_id,
         ]);
+        $this->id = (int)$id;
+        return $this;
     }
 
+    /**
+     * Updates values
+     * @return bool
+     */
     public function save(): bool
     {
+
         $now = date('Y-m-d H:i:s');
         $existing = self::find($this->movie_id, $this->session_id);
         $movie = new Movie(['id' => $this->movie_id]);
+
+        if (!self::isValidVote($this->vote_type)) {
+            throw new InvalidArgumentException('Invalid vote');
+        }
 
         // If no existing vote create new vote
         if (!$existing) {
             $this->created_at = $now;
             $this->updated_at = null;
 
-            $this->create();
+            $this->db->beginTransaction();
+            try {
+                $this->create();
 
-            if ($this->vote_type === 1) {
-                $movie->incrementUpvotes();
-            } else {
-                $movie->incrementDownvotes();
+                if ($this->vote_type === 1) {
+                    $movie->incrementUpvotes();
+                } else {
+                    $movie->incrementDownvotes();
+                }
+                $this->db->commit();
+            } catch (Exception $e) {
+                    $this->db->rollBack();
+                    throw $e;
             }
 
             return true;
@@ -120,26 +130,35 @@ class Vote
             return false;
         }
 
-        // If the vote changed, adjust
-        if ($existing->vote_type === 1 && $this->vote_type === -1) {
-            $movie->decrementUpvotes();
-            $movie->incrementDownvotes();
-        } elseif ($existing->vote_type === -1 && $this->vote_type === 1) {
-            $movie->decrementDownvotes();
-            $movie->incrementUpvotes();
+        $this->db->beginTransaction();
+        try {
+            // If the vote changed, adjust
+            if ($existing->vote_type === 1 && $this->vote_type === -1) {
+                $movie->decrementUpvotes();
+                $movie->incrementDownvotes();
+            } elseif ($existing->vote_type === -1 && $this->vote_type === 1) {
+                $movie->decrementDownvotes();
+                $movie->incrementUpvotes();
+            }
+
+            // update vote
+            $this->updated_at = $now;
+
+            $updated =$this->db->update(self::table(), [
+                'vote_type' => $this->vote_type,
+                'updated_at' => $now
+            ], [
+                'movie_id' => $this->movie_id,
+                'session_id' => $this->session_id
+            ]);
+            if (!$updated) {
+                throw new RuntimeException('Failed to update vote');
+            }
+            $this->db->commit();
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
         }
-
-
-        // update vote
-        $this->updated_at = $now;
-
-        $this->db->update(self::table(), [
-            'vote_type' => $this->vote_type,
-            'updated_at' => $now
-        ], [
-            'movie_id' => $this->movie_id,
-            'session_id' => $this->session_id
-        ]);
 
         return true;
     }
@@ -149,6 +168,9 @@ class Vote
         return $this->db->delete(self::TABLE, ['id' => $this->id]);
     }
 
+    /**
+     * @return bool
+     */
     public function loadExisting(): bool
     {
         $vote =  self::find($this->movie_id, $this->session_id);
@@ -158,21 +180,35 @@ class Vote
 
         $this->id = $vote->id;
         $this->created_at = $vote->created_at;
+        $this->updated_at = $vote->updated_at;
 
         return true;
     }
-    public function canVote(int $cooldown = 2): bool
+
+    /**
+     * @param int $cooldown
+     * @return bool
+     */
+    public function canVote(): bool
     {
+        $config = require __DIR__ . '/../config.php';
         $this->loadExisting();
 
         if (empty($this->created_at)) {
             return true;
         }
 
-        $lastVoteTime = strtotime($this->created_at);
-        return (time() - $lastVoteTime) >= $cooldown;
+        $lastVoteTime = $this->updated_at ?? $this->created_at;
+        $lastVoteTime = strtotime($lastVoteTime);
+        return (time() - $lastVoteTime) >= $config['cooldown'];
     }
 
+    /**
+     * Find vote based on movie_id and session_id
+     * @param int $movie_id
+     * @param string $session_id
+     * @return Vote|null
+     */
     public static function find(int $movie_id, string $session_id): ?Vote
     {
         $db = Database::instance();
@@ -188,13 +224,22 @@ class Vote
         return new Vote($rows[0]);
     }
 
+    /**
+     * Returns table name
+     * @return string
+     */
     public static function table(): string
     {
         return self::TABLE;
     }
 
-    public static function isValidVote($vote): bool
+    /**
+     * Checks to see if vote is valid number
+     * @param int $vote
+     * @return bool
+     */
+    public static function isValidVote(int $vote): bool
     {
-        return in_array((int)$vote, [1, -1], true);
+        return in_array($vote, [1, -1], true);
     }
 }

@@ -1,7 +1,8 @@
 <?php
 
 require __DIR__ . '/database.php';
-include __DIR__ . '/votes.php';
+require_once __DIR__ . '/votes.php';
+
 
 /**
  * Movie Model
@@ -107,24 +108,7 @@ class Movie
     public static function all(): array
     {
         $db = Database::instance();
-
-        $sql = "
-            SELECT
-                m.id,
-                m.title,
-                m.description,
-                m.image_link,
-                m.upvotes,
-                m.downvotes,
-                m.created_at
-            FROM " . self::table() . " m
-            ORDER BY upvotes DESC
-        ";
-
-
-
-        $rows = $db->query($sql);
-
+        $rows = $db->select(self::TABLE, [], 'title' );
         return array_map(fn($row) => new Movie($row), $rows);
     }
 
@@ -137,38 +121,40 @@ class Movie
     public static function find(int $id): ?Movie
     {
         $db = Database::instance();
-
-        $sql = "
-            SELECT
-                m.id,
-                m.title,
-                m.description,
-                m.image_link,
-                m.created_at,
-                m.upvotes,
-                m.downvotes
-            FROM " . self::table() . " m
-            WHERE m.id = :id
-        ";
-
-        $row = $db->query($sql, ['id' => $id]);
+        $row = $db->select(self::table(), ['id' => $id]);
 
         return $row ? new Movie($row[0]) : null;
     }
 
     /**
      * Creates a new movie
-     * @return string
+     * @return int Last insert ID of model
      */
-    public function create(): string
+    public function create(): int
     {
-        return $this->db->insert(self::TABLE, [
+        $id = $this->db->insert(self::table(), [
                 'title' => $this->title,
                 'description' => $this->description,
                 'image_link' => $this->image_link,
                 'upvotes' => 0,
                 'downvotes' => 0
         ]);
+
+        $this->id = (int) $id;
+        return $this->id;
+    }
+
+    /**
+     * Update current model
+     * @return bool
+     */
+    public function update(): bool
+    {
+        return $this->db->update(self::table(), [
+            'title' => $this->title,
+            'description' => $this->description,
+            'image_link' => $this->image_link,
+        ], ['id' => $this->id]);
     }
 
     /**
@@ -204,7 +190,7 @@ class Movie
             "UPDATE " . self::table() . " SET upvotes = upvotes - 1 WHERE id = :id",
             ['id' => $this->id]
         );
-        $this->upvotes++;
+        $this->upvotes--;
     }
 
     /**
@@ -271,5 +257,21 @@ class Movie
     ";
 
         $db->execute($sql);
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'image_link' => $this->image_link,
+            'upvotes' => $this->upvotes,
+            'downvotes' => $this->downvotes,
+            'created_at' => $this->created_at,
+        ];
     }
 }

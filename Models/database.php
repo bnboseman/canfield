@@ -18,7 +18,7 @@ class Database {
     private PDO $connection;
 
     /**
-     * Private __construct to ensure Singleton usage
+     * Private __construct for proper Singleton
      * Initializes PDO connection using $config values
      *
      * @throws PDOException If connection failes
@@ -58,6 +58,7 @@ class Database {
 
     /**
      * Inserts record into the table
+     *
      * @param string $table  Name of table
      * @param array $data  Array column => value of values to insert
      * @return false|string Last inserted value on success, false on failure
@@ -82,6 +83,7 @@ class Database {
 
     /**
      * Gets records from table with optional conditions
+     *
      * @param string $table Table Name
      * @param array $conditions Optional WHERE conditions (column => value)
      * @return array Result set as associative arrays
@@ -89,7 +91,7 @@ class Database {
      * @throws InvalidArgumentException if table or columns names are invalid
      * @throws PDOException If query fails
      */
-    public function select(string $table, array $conditions = []): array
+    public function select(string $table, array $conditions = [], ?string $orderBy = null, string $direction = 'ASC'): array
     {
         $this->validateData($table, $conditions);
 
@@ -105,6 +107,14 @@ class Database {
             $sql .= " WHERE " . implode(" AND ", $clauses);
         }
 
+        if ($orderBy !== null) {
+            $direction = strtoupper($direction);
+            if (!in_array($direction, ['ASC', 'DESC'], true)) {
+                throw new InvalidArgumentException('Invalid direction for orderBy');
+            }
+            $sql .= " ORDER BY {$orderBy} {$direction}";
+        }
+
         $stmt = $this->connection->prepare($sql);
         $stmt->execute($params);
 
@@ -115,8 +125,8 @@ class Database {
      * Updates records in a table based on conditions.
      *
      * @param string $table Name of the table
-     * @param array<string, mixed> $data Columns and values to update
-     * @param array<string, mixed> $conditions WHERE conditions to match records
+     * @param array $data Columns and values to update
+     * @param array $conditions WHERE conditions to match records
      * @return bool True on success, false on failure
      *
      * @throws @throws InvalidArgumentException if table or columns names are invalid
@@ -149,6 +159,7 @@ class Database {
 
     /**
      * Deletes from table
+     *
      * @param string $table
      * @param array $conditions
      * @return bool
@@ -175,30 +186,6 @@ class Database {
         $stmt = $this->connection->prepare($sql);
         return $stmt->execute($params);
     }
-    /**
-     * Executes a raw SQL query with optional parameters.
-     *
-     * Note: This bypasses table/column validation and should be used carefully. Currently restricted to Select
-     *
-     * @param string $sql Raw SQL query
-     * @param array<string, mixed> $params Optional bound parameters
-     * @return array<int, array<string, mixed>> Result set
-     *
-     * @throws PDOException If query execution fails
-     * @throws InvalidArgumentException If multiple statements are trying to be executed or sql contains comments
-     * @throws InvalidArgumentException If query other than select is run
-     * @throws InvalidArgumentException If params are provided but no placeholders exist
-     */
-    public function query(string $sql, array $params = []): array
-    {
-        $this->guardRawSql($sql);
-        $this->ensureSelectOnly($sql);
-        $this->ensureParamsUsed($sql, $params);
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute($params);
-
-        return $stmt->fetchAll();
-    }
 
     /**
      * Validates a table name
@@ -214,7 +201,7 @@ class Database {
     /**
      * Validates column names in an associative array.
      *
-     * @param array<string, mixed> $columns Column => value pairs
+     * @param array $columns Column => value pairs
      * @return bool True if all column names are valid
      */
     public function hasValidColumnNames(array $columns): bool
@@ -231,7 +218,7 @@ class Database {
      * Validates table name and one or more sets of column arrays.
      *
      * @param string $table Table name
-     * @param array<string, mixed> ...$columnSets One or more arrays of column => value pairs
+     * @param array ...$columnSets One or more arrays of column => value pairs
      * @return bool True if all validations pass
      *
      * @throws InvalidArgumentException If table or any column name is invalid
@@ -253,69 +240,35 @@ class Database {
     }
 
     /**
-     * Applies basic safety checks to a raw SQL string to prevents common misuse patterns
-     *
-     * Note:
-     * This is not full SQL validation! Use Carefully
-     *
-     * @param string $sql Raw SQL query string
-     * @return void
-     *
-     * @throws InvalidArgumentException If multiple statements or comments are detected
-     */
-    private function guardRawSql(string $sql): void
-    {
-        $trimmed = trim($sql);
-
-        // Block multiple statements
-        if (str_contains($trimmed, ';')) {
-            throw new InvalidArgumentException("Multiple statements are not allowed.");
-        }
-
-        // Block SQL comments
-        if (preg_match('/(--|#|\/\*)/', $trimmed)) {
-            throw new InvalidArgumentException("SQL comments are not allowed.");
-        }
-    }
-
-    /**
-     * Ensures that the provided SQL query is a SELECT statement to restrict raw queries to read-only operations.
-     *
-     * @param string $sql Raw SQL query string
-     * @return void
-     *
-     * @throws InvalidArgumentException If the query is not a SELECT statement
-     */
-    private function ensureSelectOnly(string $sql): void
-    {
-        if (!preg_match('/^\s*SELECT\b/i', $sql)) {
-            throw new InvalidArgumentException("Only SELECT queries are allowed.");
-        }
-    }
-
-    /**
-     * Ensures that named parameters are used when parameters are provided to help enforce the use of prepared statements
-     *
-     * @param string $sql Raw SQL query string
-     * @param array<string, mixed> $params Bound parameters
-     * @return void
-     *
-     * @throws InvalidArgumentException If parameters are provided but no placeholders exist
-     */
-    private function ensureParamsUsed(string $sql, array $params): void
-    {
-        // Check if params are provided but no placeholders exist
-        if (!empty($params) && !preg_match('/:\w+/', $sql)) {
-            throw new InvalidArgumentException("Query must use named parameters.");
-        }
-    }
-
-    /**
      * Execute a write query (INSERT/UPDATE/DELETE with expressions)
      */
     public function execute(string $sql, array $params = []): bool
     {
         $stmt = $this->connection->prepare($sql);
         return $stmt->execute($params);
+    }
+
+    /**
+     * @return bool
+     */
+    public function beginTransaction(): bool
+    {
+        return $this->connection->beginTransaction();
+    }
+
+    /**
+     * @return bool
+     */
+    public function commit(): bool
+    {
+        return $this->connection->commit();
+    }
+
+    /**
+     * @return bool
+     */
+    public function rollBack(): bool
+    {
+        return $this->connection->rollBack();
     }
 }
