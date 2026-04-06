@@ -1,11 +1,10 @@
 # Canfield Scientific, Inc Test
 
-Single page web application that touches on database, PHP, HTML/CSS
-and JavaScript/jQuery/AJAX. Displays a small set of movies pulled from
-a MySQL database, each with title, description and thumbs up/down count totals.
-Movies can be up/down voted and stored in the database.
-Votes are submitted via AJAX to a PHP API endpoint, which acts as a 
-middleware layer between the client and the database.
+This is a single-page web application that demonstrates integration between a MySQL 
+database, PHP backend, and a JavaScript/jQuery frontend.
+
+The application displays a list of movies with upvote and downvote functionality. 
+Votes are processed via AJAX and persisted in the database without requiring a full page reload.
 
 The database is accessed using an instance of a PHP class that manages
 the connection and provides methods for accessing the movie table.
@@ -16,13 +15,17 @@ Validation is implemented on both the client and server side. The API ensures th
 valid vote values (1 or -1) are accepted, prevents duplicate voting per session, and enforces 
 a cooldown period to avoid abuse. Cooldown timer can be set on the backend in the config.php file.
 
-Each vote is uniquely constrained by a combination of movie_id and session_id.
-This ensures that a user (per session) can only have one active vote per movie.
+Each vote is unique per movie and session, ensuring a user can only vote once per movie.
+
+This ensures that a user can only have one vote per movie. If a vote is submitted again for the same movie,
+the existing vote is updated instead of creating a duplicate.
 
 If a user votes again on the same movie, the existing vote is updated rather than inserting a new record.
 
 The application includes error handling for invalid input, duplicate voting attempts, and server-side failures, 
 ensuring a consistent user experience.
+
+Input is validated server-side to ensure only valid vote values (1 or -1) are accepted.
 
 The seeding script generates a unique session_id for each vote to comply with the database constraint 
 on (movie_id, session_id). It performs destructive operations (dropping and recreating tables) and is 
@@ -88,10 +91,17 @@ CREATE TABLE `votes` (
 
 Copy `config.sample.php` to `config.php`. Update `config.php` with your database credentials
 
-## Recalculate Vote Counts
+## Running the Application
 
-Upvotes and Downvotes are saved to the Movies database table, but the source of truth is the votes table. To
-recalculate vote counts run the query
+1. Configure your database in `config.php`
+2. Run the migration/seeding script:
+   php migrations/seed.php
+3. Start your local server (e.g. Apache or PHP built-in server)
+4. Open the application in your browser
+
+## Recalculate Vote Counts
+Vote data is stored in the votes table, and totals are reflected in the movies table.
+To recalculate vote counts run the query
 
 ```sql
 UPDATE movies m
