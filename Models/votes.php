@@ -30,8 +30,8 @@ class Vote
     public int $vote_type;
     public string $ip_address;
     public string $session_id;
-    public string $created_at;
-    public string $updated_at;
+    public $created_at;
+    public $updated_at;
 
     public function __construct(array $data = [])
     {
