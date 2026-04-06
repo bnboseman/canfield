@@ -47,7 +47,7 @@ class Database {
      * Returns singleton Database instance
      * @return Database
      */
-    public static function  instance(): Database
+    public static function  getInstance(): Database
     {
         if (self::$instance === null) {
             self::$instance = new self();

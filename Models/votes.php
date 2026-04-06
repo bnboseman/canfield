@@ -35,7 +35,7 @@ class Vote
 
     public function __construct(array $data = [])
     {
-        $this->db = Database::instance();
+        $this->db = Database::getInstance();
 
         if (!empty($data)) {
             $this->fill($data);
@@ -174,7 +174,7 @@ class Vote
     public function loadExisting(): bool
     {
         $vote =  self::find($this->movie_id, $this->session_id);
-        if (empty($vote)) {
+        if ($vote === null) {
             return false;
         }
 
@@ -211,7 +211,7 @@ class Vote
      */
     public static function find(int $movie_id, string $session_id): ?Vote
     {
-        $db = Database::instance();
+        $db = Database::getInstance();
         $rows = $db->select(self::table(), [
             'movie_id' => $movie_id,
             'session_id' => $session_id

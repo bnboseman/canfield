@@ -9,7 +9,7 @@ require_once(__DIR__ . "/../Models/votes.php");
 /**
  * Recalculate vote totals (source of truth = votes table)
  */
-$db = Database::instance();
+$db = Database::getInstance();
 $file = __DIR__ . '/migration.sql';
 
 if (!file_exists($file)) {

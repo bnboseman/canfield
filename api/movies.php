@@ -37,7 +37,7 @@ switch ($method) {
             $movies = Movie::all();
             echo json_encode([
                 'success' => true,
-                'data' => $movies
+                'data' => array_map(fn($m) => $m->toArray(), $movies)
             ]);
         }
         break;

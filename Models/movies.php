@@ -68,7 +68,7 @@ class Movie
      */
     public function __construct(array $data = [])
     {
-        $this->db = Database::instance();
+        $this->db = Database::getInstance();
 
         if (!empty($data)) {
             $this->fill($data);
@@ -107,7 +107,7 @@ class Movie
      */
     public static function all(): array
     {
-        $db = Database::instance();
+        $db = Database::getInstance();
         $rows = $db->select(self::TABLE, [], 'upvotes', 'desc' );
         return array_map(fn($row) => new Movie($row), $rows);
     }
@@ -120,7 +120,7 @@ class Movie
      */
     public static function find(int $id): ?Movie
     {
-        $db = Database::instance();
+        $db = Database::getInstance();
         $row = $db->select(self::table(), ['id' => $id]);
 
         return $row ? new Movie($row[0]) : null;
@@ -263,7 +263,7 @@ class Movie
      */
     public static function rebuildVoteCounts(): void
     {
-        $db = Database::instance();
+        $db = Database::getInstance();
 
         $sql = "
         UPDATE movies m
