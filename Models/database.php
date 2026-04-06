@@ -38,7 +38,7 @@ class Database {
                 ]
             );
         } catch (PDOException $e) {
-            die("Connection Failed.");
+            throw new RuntimeException("Database connection failed: " . $e->getMessage());
         }
         $this->connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     }

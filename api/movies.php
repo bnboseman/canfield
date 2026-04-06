@@ -20,18 +20,21 @@ switch ($method) {
                     'success' => true,
                     'data' => $movie
                 ]);
+                exit();
             } catch (InvalidArgumentException $e) {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
                     'error' => $e->getMessage()
                 ]);
+                exit();
             } catch (Exception $e) {
                 http_response_code(500);
                 echo json_encode([
                     'success' => false,
                     'error' => 'Server error'
                 ]);
+                exit();
             }
         } else {
             $movies = Movie::all();
@@ -39,6 +42,7 @@ switch ($method) {
                 'success' => true,
                 'data' => array_map(fn($m) => $m->toArray(), $movies)
             ]);
+            exit();
         }
         break;
     case 'POST':
@@ -80,24 +84,28 @@ switch ($method) {
                 'success' => true,
                 'data' => $movies
              ]);
+            exit();
         } catch (InvalidArgumentException $e) {
             http_response_code(400);
             echo json_encode([
                 'success' => false,
                 'error' => $e->getMessage()
             ]);
+            exit();
         } catch (RuntimeException $e) {
             http_response_code(403);
             echo json_encode([
                 'success' => false,
                 'error' => $e->getMessage()
             ]);
+            exit();
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
                 'error' => 'Server error'
             ]);
+            exit();
         }
         break;
     default:
@@ -106,5 +114,6 @@ switch ($method) {
             'success' => false,
             'error' => 'Method Not Allowed'
         ]);
+        exit();
         break;
 }
