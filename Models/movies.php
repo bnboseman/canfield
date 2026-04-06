@@ -108,7 +108,7 @@ class Movie
     public static function all(): array
     {
         $db = Database::instance();
-        $rows = $db->select(self::TABLE, [], 'title' );
+        $rows = $db->select(self::TABLE, [], 'upvotes', 'desc' );
         return array_map(fn($row) => new Movie($row), $rows);
     }
 
