@@ -132,8 +132,8 @@ $(function () {
                 clearError();
             },
             error: function (response) {
-                console.error(response.responseJSON);
-                showError(response.responseJSON.error);
+                console.error(response);
+                showError(response.responseJSON?.error || 'Something went wrong');
             }
         });
     }
@@ -176,30 +176,14 @@ $(function () {
                         loadMovies(); // re-render to re-enable
                     }, COOLDOWN_TIME);
                 } else {
-                    console.error(response.responseJSON);
-                    showError(response.responseJSON.error);
+                    console.error(response);
+                    showError(response.error || 'Something went wrong');
                     container.removeClass('disabled');
                 }
             },
             error: function (response) {
-                    console.error(response);
-
-                    let message = 'Something went wrong';
-
-                    if (response.responseJSON && response.responseJSON.error) {
-                        message = response.responseJSON.error;
-                    } else if (response.responseText) {
-                        try {
-                            const parsed = JSON.parse(response.responseText);
-                            if (parsed.error) {
-                                message = parsed.error;
-                            }
-                        } catch (e) {
-                            message = response.responseText;
-                        }
-                    }
-
-                    showError(message);
+                    console.error(response.responseJSON);
+                    showError(response.responseJSON?.error || 'Something went wrong');
                     container.removeClass('disabled');
             }
         })
