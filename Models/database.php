@@ -176,6 +176,12 @@ class Database {
             throw new InvalidArgumentException("Delete requires conditions.");
         }
 
+        foreach ($conditions as $value) {
+            if ($value === null) {
+                throw new InvalidArgumentException("Null condition not allowed");
+            }
+        }
+
         $this->validateData($table, $conditions);
 
         $clauses = [];
