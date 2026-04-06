@@ -169,55 +169,79 @@ class Movie
 
     /**
      * Increments count of upvotes in database
-     * @return void
+     * @return bool
      */
-    public function incrementUpvotes(): void
+    public function incrementUpvotes(): bool
     {
-        $this->db->execute(
+        $success = $this->db->execute(
             "UPDATE " . self::table() . " SET upvotes = upvotes + 1 WHERE id = :id",
             ['id' => $this->id]
         );
+
+        if (!$success) {
+            throw new RuntimeException('Failed to update vote count');
+        }
+
         $this->upvotes++;
+
+        return $sucess;
     }
 
     /**
      * Decrement count of upvotes in database
-     * @return void
+     * @return bool
      */
-    public function decrementUpvotes(): void
+    public function decrementUpvotes(): bool
     {
-        $this->db->execute(
+        $success = $this->db->execute(
             "UPDATE " . self::table() . " SET upvotes = upvotes - 1 WHERE id = :id",
             ['id' => $this->id]
         );
+
+        if (!$success) {
+            throw new RuntimeException('Failed to update vote count');
+        }
         $this->upvotes--;
+
+        return $success;
     }
 
     /**
      * Increwments count of downvotes in database
-     * @return void
+     * @return bool
      */
-    public function incrementDownvotes(): void
+    public function incrementDownvotes(): bool
     {
-        $this->db->execute(
+        $success = $this->db->execute(
             "UPDATE " . self::table() . " SET downvotes = downvotes + 1 WHERE id = :id",
             ['id' => $this->id]
         );
 
+        if (!$success) {
+            throw new RuntimeException('Failed to update vote count');
+        }
+
         $this->downvotes++;
+
+        return  $success;
     }
 
     /**
      * Decrement count of downvotes in database
-     * @return void
+     * @return bool
      */
-    public function decrementDownvotes(): void
+    public function decrementDownvotes(): bool
     {
-        $this->db->execute(
+        $success = $this->db->execute(
             "UPDATE " . self::table() . " SET downvotes = downvotes - 1 WHERE id = :id",
             ['id' => $this->id]
         );
+
+        if (!$success) {
+            throw new RuntimeException('Failed to update vote count');
+        }
         $this->downvotes--;
+        return $success;
     }
 
 

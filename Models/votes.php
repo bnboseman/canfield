@@ -19,7 +19,7 @@ class Vote
         'session_id'
     ];
 
-    protected array $readonly = [
+    protected array $attributes = [
         'id',
         'created_at',
         'updated_at'
@@ -50,7 +50,7 @@ class Vote
     private function fill(array $data): void
     {
         foreach ($data as $key => $value) {
-            if (!in_array($key, $this->fillable, true) && !in_array($key, $this->readonly, true)) {
+            if (!in_array($key, $this->fillable, true) && !in_array($key, $this->attributes, true)) {
                 continue;
             }
 
