@@ -1,7 +1,11 @@
-
 <?php
+namespace Models;
 
-require_once __DIR__ . '/database.php';
+use Database\Database;
+use Movie;
+use RuntimeException;
+use Exception;
+use InvalidArgumentException;
 
 /**
  *  Vote model
@@ -88,6 +92,19 @@ class Vote
     }
 
     /**
+     * @return array|null
+     */
+    protected function getExistingData()
+    {
+        $data = $this->db->select(self::table(), [
+            'movie_id' => $this->movie_id,
+            'session_id' => $this->session_id
+        ]);
+
+        return $data[0] ?? null;
+    }
+
+    /**
      * Updates values
      * @return bool
      */
@@ -95,7 +112,7 @@ class Vote
     {
 
         $now = date('Y-m-d H:i:s');
-        $existing = self::find($this->movie_id, $this->session_id);
+        $existing = $this->getExistingData();
         $movie = new Movie(['id' => $this->movie_id]);
 
         if (!self::isValidVote($this->vote_type)) {
@@ -126,17 +143,17 @@ class Vote
         }
 
         // If the vote is the same, we don't have to do anything
-        if ($existing->vote_type === $this->vote_type) {
+        if ($existing['vote_type'] === $this->vote_type) {
             throw new RuntimeException('Vote already set');
         }
 
         $this->db->beginTransaction();
         try {
             // If the vote changed, adjust
-            if ($existing->vote_type === 1 && $this->vote_type === -1) {
+            if ($existing['vote_type'] === 1 && $this->vote_type === -1) {
                 $movie->decrementUpvotes();
                 $movie->incrementDownvotes();
-            } elseif ($existing->vote_type === -1 && $this->vote_type === 1) {
+            } elseif ($existing['vote_type'] === -1 && $this->vote_type === 1) {
                 $movie->decrementDownvotes();
                 $movie->incrementUpvotes();
             }
@@ -154,6 +171,7 @@ class Vote
             if (!$updated) {
                 throw new RuntimeException('Failed to update vote');
             }
+
             $this->db->commit();
         } catch (Exception $e) {
             $this->db->rollBack();
@@ -171,9 +189,9 @@ class Vote
     /**
      * @return bool
      */
-    public function loadExisting(): bool
+    public function refresh(): bool
     {
-        $vote =  self::find($this->movie_id, $this->session_id);
+        $vote =  $this->getExistingData();
         if ($vote === null) {
             return false;
         }
@@ -191,8 +209,8 @@ class Vote
      */
     public function canVote(): bool
     {
-        $config = require __DIR__ . '/../config.php';
-        $this->loadExisting();
+        $config = require __DIR__ . '/../../config.php';
+        $this->refresh();
 
         if (empty($this->created_at)) {
             return true;

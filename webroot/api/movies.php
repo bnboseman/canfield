@@ -1,5 +1,8 @@
 <?php
-require_once '../models/movies.php';
+require_once(__DIR__ . '/../../config/bootstrap.php' );
+use Models\Movie;
+use Models\Vote;
+
 session_start();
 $session_id = session_id();
 

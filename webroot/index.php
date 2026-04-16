@@ -1,4 +1,7 @@
-<?php session_start(); ?>
+<?php session_start();
+$config = require __DIR__ . '/../config/config.php';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +10,7 @@
 
     <title>Movie Upvote Test</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
@@ -18,11 +21,16 @@
     <div id="error" class="error" role="alert" aria-live="assertive"></div>
 
     <!-- Movies Container -->
-    <section class="movies" aria-label="Movie list">
+    <section id="movies_container" class="movies" aria-label="Movie list">
         <!-- Movies injected via JS -->
     </section>
 </main>
 
+<script>
+    window.APP = {
+        timeout: <?php echo ((int)$config['cooldown'] * 1000); ?>
+    };
+</script>
 <script
         src="https://code.jquery.com/jquery-4.0.0.min.js"
         integrity="sha256-OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao="

@@ -1,8 +1,7 @@
 <?php
+use Models\Movie;
+use Models\Vote;
 
-require_once(__DIR__ . "/Models/movies.php");
-
-require_once(__DIR__ . "/Models/votes.php");
 function randomPublicIp(): string
 {
     do {
@@ -22,7 +21,6 @@ function generateVotes(int $count = 50)
 {
     $movies = Movie::all();
     foreach ($movies as $movie) {
-
         for ($i = 0; $i <= $count; $i++) {
             $vote = (new Vote([
                 'movie_id' => $movie->id,

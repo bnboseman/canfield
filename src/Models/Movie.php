@@ -1,7 +1,8 @@
 <?php
 
-require __DIR__ . '/database.php';
-require_once __DIR__ . '/votes.php';
+namespace Models;
+
+use Database\Database;
 
 
 /**
