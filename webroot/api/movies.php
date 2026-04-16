@@ -62,30 +62,28 @@ switch ($method) {
                 throw new InvalidArgumentException('Invalid input');
             }
 
-            // Only update if movie exists
-            $movie = Movie::find($movie_id);
-            if (!$movie) {
-                throw new InvalidArgumentException('Invalid input');
-            }
-
             $data = [
-                'movie_id' => $movie->id,
+                'movie_id' => $movie_id,
                 'vote_type' => $vote_value,
                 'session_id' => $session_id,
                 'ip_address' => $_SERVER['REMOTE_ADDR']
             ];
 
             $vote = new Vote($data);
+
+            if (!$vote->isMovieSet()) {
+                throw new InvalidArgumentException('Invalid input');
+            }
+
+
             if (!$vote->canVote()) {
                 throw new RuntimeException('You\'ve already voted recently. Please wait before voting again.');
             }
 
-
             $vote->save();
-            $movies = Movie::all();
             echo json_encode([
                 'success' => true,
-                'data' => $movies
+                'data' => $vote->toArray()
              ]);
             exit();
         } catch (InvalidArgumentException $e) {

@@ -29,13 +29,15 @@ class Vote
         'updated_at'
     ];
 
-    public int $id;
-    public int $movie_id;
-    public int $vote_type;
-    public ?string $ip_address = null;
-    public string $session_id;
-    public ?string $created_at = null;
-    public ?string $updated_at = null;
+    protected int $id;
+    protected int $movie_id;
+    protected int $vote_type;
+    protected ?string $ip_address = null;
+    protected string $session_id;
+    protected ?string $created_at = null;
+    protected ?string $updated_at = null;
+
+    protected ?Movie $movie = null;
 
     public function __construct(array $data = [])
     {
@@ -61,8 +63,11 @@ class Vote
             switch ($key){
                 case 'id':
                 case 'vote_type':
+                    $this->$key = (int)$value;
+                    break;
                 case 'movie_id':
                     $this->$key = (int)$value;
+                    $this->movie = Movie::find($value);
                     break;
                 case 'ip_address':
                     $ip = filter_var($value, FILTER_VALIDATE_IP);
@@ -112,7 +117,7 @@ class Vote
     {
         $now = date('Y-m-d H:i:s');
         $existing = $this->getExistingData();
-        $movie = new Movie(['id' => $this->movie_id]);
+
 
         if (!self::isValidVote($this->vote_type)) {
             throw new InvalidArgumentException('Invalid vote');
@@ -128,9 +133,9 @@ class Vote
                 $this->create();
 
                 if ($this->vote_type === 1) {
-                    $movie->incrementUpvotes();
+                    $this->movie->incrementUpvotes();
                 } else {
-                    $movie->incrementDownvotes();
+                    $this->movie->incrementDownvotes();
                 }
                 $this->db->commit();
             } catch (Exception $e) {
@@ -150,11 +155,11 @@ class Vote
         try {
             // If the vote changed, adjust
             if ($existing['vote_type'] === 1 && $this->vote_type === -1) {
-                $movie->decrementUpvotes();
-                $movie->incrementDownvotes();
+                $this->movie->decrementUpvotes();
+                $this->movie->incrementDownvotes();
             } elseif ($existing['vote_type'] === -1 && $this->vote_type === 1) {
-                $movie->decrementDownvotes();
-                $movie->incrementUpvotes();
+                $this->movie->decrementDownvotes();
+                $this->movie->incrementUpvotes();
             }
 
             // update vote
@@ -208,7 +213,7 @@ class Vote
      */
     public function canVote(): bool
     {
-        $config = require __DIR__ . '/../../config.php';
+        $config = require __DIR__ . '/../../config/config.php';
         $this->refresh();
 
         if (empty($this->created_at)) {
@@ -218,6 +223,11 @@ class Vote
         $lastVoteTime = $this->updated_at ?? $this->created_at;
         $lastVoteTime = strtotime($lastVoteTime);
         return (time() - $lastVoteTime) >= $config['cooldown'];
+    }
+
+    public function isMovieSet()
+    {
+        return !is_null($this->movie);
     }
 
     /**
@@ -258,5 +268,15 @@ class Vote
     public static function isValidVote(int $vote): bool
     {
         return in_array($vote, [1, -1], true);
+    }
+
+    public function toArray() {
+        return [
+            'id' => $this->id,
+            'vote_type' => $this->vote_type,
+            'movie' => $this->movie->toArray(),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+        ];
     }
 }

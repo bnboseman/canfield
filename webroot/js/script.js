@@ -6,7 +6,6 @@ function page_loaded() {
     const error_container = $('#error_container');
 
     loadMovies();
-    console.log(movies);
 
     function loadMovies() {
         $.ajax({
@@ -27,32 +26,29 @@ function page_loaded() {
         });
     }
 
-    function renderMovies() {
-        console.log(movies);
-    }
-
     function showError(message) {
-        error_container.text(message);
-        error_container.show();
+        error_container.show().text(message);
     }
 
     function clearError() {
         error_container.hide().text('');
     }
-    function Movie(params) {
-        var movie = this;
-        var $movie;
-        var voteCooldown;
 
+    function Movie(params) {
+        var $movie;
+        var voteCooldownTimer;
+        var $buttons = $();
+        var $actions;
+        var $upvotes;
+        var $downvotes;
 
         init();
 
         function init() {
-            const now = Date.now();
 
             $movie = $('<div>')
-                .addClass('movie')
-                .appendTo(movie_container);
+            .addClass('movie')
+            .appendTo(movie_container);
 
 
             const $title = $('<div>').addClass('title').appendTo($movie);
@@ -76,44 +72,48 @@ function page_loaded() {
                 .attr('aria-live', 'polite')
                 .appendTo($movie);
 
-            $('<span>')
+            $upvotes = $('<span>')
                 .addClass('upvotes')
                 .text(`Upvotes: ${params.upvotes}`)
                 .appendTo($ranking);
 
-            $('<span>')
+            $downvotes = $('<span>')
                 .addClass('downvotes')
                 .text(`Downvotes: ${params.downvotes}`)
                 .appendTo($ranking);
 
-            const $actions = $('<div>').addClass('actions').appendTo($movie);
+            $actions = $('<div>').addClass('actions').appendTo($movie);
 
-            createButton($actions, 1, 'Upvote', voteCooldown);
-            createButton($actions, -1, 'Downvote', voteCooldown);
+            createButton($actions, 1, 'Upvote');
+            createButton($actions, -1, 'Downvote');
         }
 
-        function createButton($container, voteType, label, disabled) {
-            $('<button>')
+        function createButton($container, voteType, label) {
+            const $btn = $('<button>')
                 .addClass(`${voteType === 1 ? 'upvote' : 'downvote'} button`)
                 .attr('aria-label', `${label} ${params.title}`)
-                .prop('disabled', disabled)
-                .text(voteType === 1 ? 'Upvote' : 'Downvote')
-                .attr('aria-disabled', disabled)
+                .text(label)
                 .on('click', function () {
-                    handleVote(voteType);
+                    vote(voteType);
                 })
                 .appendTo($container);
+
+            $buttons = $buttons.add($btn);
         }
 
-        function handleVote(voteType) {
-            console.log('Vote:', params.id, voteType);
-            vote(voteType);
+        function disableButtons() {
+            $buttons.prop('disabled', true).attr('aria-disabled', true).addClass('disabled');
+            $actions.addClass('disabled')
+
+        }
+
+        function enableButtons() {
+            $buttons.prop('disabled', false).attr('aria-disabled', false).removeClass('disabled');
+            $actions.removeClass('disabled')
         }
 
         function vote(voteType) {
-            voteType === -1 ? -1 : 1;
-            $movie.addClass('disabled');
-
+            voteType = voteType === -1 ? -1 : 1;
             $.ajax({
                 url: '/api/movies.php',
                 method: 'POST',
@@ -125,23 +125,29 @@ function page_loaded() {
                 success: function (response) {
                     if (response.success) {
                         clearError();
-                        voteCooldown = Date.now() + window.APP.timeout;
-                        renderMovies(response.data);
+                        disableButtons();
+                        voteCooldownTimer = Date.now() + window.APP.timeout;
 
                         setTimeout(() => {
-                            delete voteCooldown;
-                            loadMovies(); // re-render to re-enable
-                        }, COOLDOWN_TIME);
+                            enableButtons();
+                            voteCooldownTimer = null;
+                        }, window.APP.timeout);
+
+                        params.upvotes = response.data.movie.upvotes;
+                        params.downvotes = response.data.movie.downvotes;
+
+                        $upvotes.text(`Upvotes: ${params.upvotes}`);
+                        $downvotes.text(`Downvotes: ${params.downvotes}`);
                     } else {
                         console.error(response);
                         showError(response.error || 'Something went wrong');
-                        $movie.removeClass('disabled');
+                        enableButtons();
                     }
                 },
                 error: function (response) {
                     console.error(response.responseJSON);
                     showError(response.responseJSON?.error || 'Something went wrong');
-                    $movie.removeClass('disabled');
+                    enableButtons();
                 }
             })
         }

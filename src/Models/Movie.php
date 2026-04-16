@@ -195,7 +195,7 @@ class Movie
     public function decrementUpvotes(): bool
     {
         $success = $this->db->execute(
-            "UPDATE " . self::table() . " SET upvotes = upvotes - 1 WHERE id = :id",
+            "UPDATE " . self::table() . " SET upvotes = GREATEST(upvotes - 1, 0) WHERE id = :id",
             ['id' => $this->id]
         );
 
@@ -234,7 +234,7 @@ class Movie
     public function decrementDownvotes(): bool
     {
         $success = $this->db->execute(
-            "UPDATE " . self::table() . " SET downvotes = downvotes - 1 WHERE id = :id",
+            "UPDATE " . self::table() . " SET downvotes = GREATEST(downvotes - 1, 0) WHERE id = :id",
             ['id' => $this->id]
         );
 

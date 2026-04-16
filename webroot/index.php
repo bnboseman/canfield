@@ -18,7 +18,7 @@ $config = require __DIR__ . '/../config/config.php';
 
 <main>
     <!-- Error container -->
-    <div id="error" class="error" role="alert" aria-live="assertive"></div>
+    <div id="error_container" class="error" role="alert" aria-live="assertive"></div>
 
     <!-- Movies Container -->
     <section id="movies_container" class="movies" aria-label="Movie list">
@@ -35,6 +35,6 @@ $config = require __DIR__ . '/../config/config.php';
         src="https://code.jquery.com/jquery-4.0.0.min.js"
         integrity="sha256-OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao="
         crossorigin="anonymous"></script>
-<script src="/js/script.js"></script>
+<script src="/js/script.js?v=6"></script>
 </body>
 </html>
