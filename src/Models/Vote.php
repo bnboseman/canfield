@@ -2,7 +2,7 @@
 namespace Models;
 
 use Database\Database;
-use Movie;
+use Models\Movie;
 use RuntimeException;
 use Exception;
 use InvalidArgumentException;
@@ -110,7 +110,6 @@ class Vote
      */
     public function save(): bool
     {
-
         $now = date('Y-m-d H:i:s');
         $existing = $this->getExistingData();
         $movie = new Movie(['id' => $this->movie_id]);
@@ -196,9 +195,9 @@ class Vote
             return false;
         }
 
-        $this->id = $vote->id;
-        $this->created_at = $vote->created_at;
-        $this->updated_at = $vote->updated_at;
+        $this->id = $vote['id'];
+        $this->created_at = $vote['created_at'];
+        $this->updated_at = $vote['updated_at'];
 
         return true;
     }
