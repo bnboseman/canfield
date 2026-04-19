@@ -10,7 +10,7 @@ use InvalidArgumentException;
 /**
  *  Vote model
  */
-class Vote
+class Vote extends Model
 {
     private const TABLE = 'votes';
 
