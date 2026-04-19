@@ -12,8 +12,6 @@ use InvalidArgumentException;
  */
 class Vote
 {
-    private $db;
-
     private const TABLE = 'votes';
 
     protected array $fillable = [
@@ -39,21 +37,11 @@ class Vote
 
     protected ?Movie $movie = null;
 
-    public function __construct(array $data = [])
-    {
-        $this->db = ConnectionManager::get('default');
-
-        if (!empty($data)) {
-            $this->fill($data);
-        }
-    }
-
-
     /**
      * @param array $data
      * @return void
      */
-    private function fill(array $data): void
+    protected function fill(array $data): void
     {
         foreach ($data as $key => $value) {
             if (!in_array($key, $this->fillable, true) && !in_array($key, $this->attributes, true)) {

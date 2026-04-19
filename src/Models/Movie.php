@@ -15,13 +15,8 @@ use RuntimeException;
  * The model maintains counts of downvotes and upvotes for performance
  * but the votes table remains the source of truth.
  */
-class Movie
+class Movie extends Model
 {
-    /**
-     * @var Database
-     */
-    private $db;
-
     /**
      * Table Name
      */
@@ -66,18 +61,6 @@ class Movie
     public int $downvotes = 0;
 
     /**
-     * @param array $data
-     */
-    public function __construct(array $data = [])
-    {
-        $this->db = ConnectionManager::get('default');
-
-        if (!empty($data)) {
-            $this->fill($data);
-        }
-    }
-
-    /**
      * Function that accepts a data array and populates class with values
      * @param array{
      *      title?: string,
@@ -87,7 +70,7 @@ class Movie
      * } $data
      * * @return void
      */
-    private function fill(array $data): void
+    protected function fill(array $data): void
     {
         foreach ($data as $key => $value) {
             if (!in_array($key, $this->fillable, true) && !in_array($key, $this->attributes, true)) {

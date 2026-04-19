@@ -13,7 +13,7 @@ class ConnectionManager
      */
     public static function get(string $name): Database
     {
-        if (!isset($connections[$name])) {
+        if (!isset(self::$connections[$name])) {
             self::$connections[$name] = ConnectionFactory::create($name);
         }
 

@@ -68,19 +68,18 @@ switch ($method) {
                 'session_id' => $session_id,
                 'ip_address' => $_SERVER['REMOTE_ADDR']
             ];
-
             $vote = new Vote($data);
 
             if (!$vote->isMovieSet()) {
                 throw new InvalidArgumentException('Invalid input');
             }
 
-
             if (!$vote->canVote()) {
                 throw new RuntimeException('You\'ve already voted recently. Please wait before voting again.');
             }
 
             $vote->save();
+
             echo json_encode([
                 'success' => true,
                 'data' => $vote->toArray()
