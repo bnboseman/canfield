@@ -1,7 +1,7 @@
 <?php
 namespace Models;
 
-use Database\Database;
+use Database\ConnectionManager;
 use Models\Movie;
 use RuntimeException;
 use Exception;
@@ -41,7 +41,7 @@ class Vote
 
     public function __construct(array $data = [])
     {
-        $this->db = Database::getInstance();
+        $this->db = ConnectionManager::get('default');
 
         if (!empty($data)) {
             $this->fill($data);
@@ -238,7 +238,7 @@ class Vote
      */
     public static function find(int $movie_id, string $session_id): ?Vote
     {
-        $db = Database::getInstance();
+        $db = ConnectionManager::get('default');
         $rows = $db->select(self::table(), [
             'movie_id' => $movie_id,
             'session_id' => $session_id

@@ -1,11 +1,9 @@
 <?php
-
 namespace Database;
 
 use PDO;
 use PDOException;
 use InvalidArgumentException;
-use RuntimeException;
 
 /**
  * Singleton Database class responsible for managing single PDO connection and providing basic
@@ -13,12 +11,6 @@ use RuntimeException;
  */
 class Database
 {
-    /**
-     * Singleton instance
-     * @var Database|null
-     */
-    private static ?Database $instance = null;
-
     /**
      * PDO Database connection
      * @var PDO
@@ -31,39 +23,12 @@ class Database
      *
      * @throws PDOException If connection failes
      */
-    private function __construct()
+    public function __construct(PDO $connection)
     {
-        $config = require __DIR__ . '/../../config/config.php';
-
-        $dsn = "mysql:host={$config['host']};dbname={$config['dbname']};charset=utf8mb4";
-        try {
-
-            $this->connection = new PDO(
-                $dsn,
-                $config['user'],
-                $config['password'],
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-                ]
-            );
-        } catch (PDOException $e) {
-            throw new RuntimeException("Database connection failed: " . $e->getMessage());
-        }
+        $this->connection = $connection;
         $this->connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Returns singleton Database instance
-     * @return Database
-     */
-    public static function getInstance(): Database
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-
-        return self::$instance;
-    }
 
     /**
      * Inserts record into the table

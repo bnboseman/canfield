@@ -2,7 +2,8 @@
 
 namespace Models;
 
-use Database\Database;
+use Database\ConnectionManager;
+use RuntimeException;
 
 
 /**
@@ -69,7 +70,7 @@ class Movie
      */
     public function __construct(array $data = [])
     {
-        $this->db = Database::getInstance();
+        $this->db = ConnectionManager::get('default');
 
         if (!empty($data)) {
             $this->fill($data);
@@ -108,7 +109,7 @@ class Movie
      */
     public static function all(): array
     {
-        $db = Database::getInstance();
+        $db = ConnectionManager::get('default');
         $rows = $db->select(self::TABLE, [], 'upvotes', 'desc' );
         return array_map(fn($row) => new Movie($row), $rows);
     }
@@ -121,7 +122,7 @@ class Movie
      */
     public static function find(int $id): ?Movie
     {
-        $db = Database::getInstance();
+        $db = ConnectionManager::get('default');
         $row = $db->select(self::table(), ['id' => $id]);
 
         return $row ? new Movie($row[0]) : null;
@@ -264,7 +265,7 @@ class Movie
      */
     public static function rebuildVoteCounts(): void
     {
-        $db = Database::getInstance();
+        $db = ConnectionManager::get('default');
 
         $sql = "
         UPDATE movies m

@@ -89,7 +89,7 @@ CREATE TABLE `votes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-Copy `config.sample.php` to `config.php`. Update `config.php` with your database credentials
+Copy `/config/config.sample.php` to `/config/config.php`. Update `config.php` with your database credentials
 
 ## Running the Application
 
