@@ -14,7 +14,7 @@ use InvalidArgumentException;
  */
 class Vote extends Model
 {
-    private const TABLE = 'votes';
+    protected const TABLE = 'votes';
 
     protected array $fillable = [
         'vote_type',
@@ -40,33 +40,35 @@ class Vote extends Model
     protected ?Movie $movie = null;
 
     /**
+     * Sets values
      * @param array $data
      * @return void
      */
-    protected function fill(array $data): void
+    protected function transform(string $key, mixed $value): mixed
     {
-        foreach ($data as $key => $value) {
-            if (!in_array($key, $this->fillable, true) && !in_array($key, $this->attributes, true)) {
-                continue;
-            }
-
-            switch ($key){
+        switch ($key) {
                 case 'id':
                 case 'vote_type':
-                    $this->$key = (int)$value;
-                    break;
                 case 'movie_id':
-                    $this->$key = (int)$value;
-                    $this->movie = Movie::find($value);
+                    return (int)$value;
                     break;
                 case 'ip_address':
                     $ip = filter_var($value, FILTER_VALIDATE_IP);
-                    $this->$key = $ip !== false ? $ip : null;
+                    return  $ip !== false ? $ip : null;
                     break;
                 default:
-                    $this->$key = (string)$value;
+                    return (string)$value;
                     break;
-            }
+        }
+    }
+
+    /**
+     * Runs after fill to set the movie for the vote
+     * @return void
+     */
+    protected function afterFill() {
+        if (!empty($this->movie_id)) {
+            $this->movie = Movie::find($this->movie_id);
         }
     }
 
@@ -76,7 +78,7 @@ class Vote extends Model
      */
     public function create(): self
     {
-        $id = $this->db->insert(self::TABLE, [
+        $id = $this->db->insert(self::table(), [
             'movie_id' => $this->movie_id,
             'vote_type' => $this->vote_type,
             'ip_address' => $this->ip_address,
@@ -177,7 +179,7 @@ class Vote extends Model
 
     public function delete(): bool
     {
-        return $this->db->delete(self::TABLE, ['id' => $this->id]);
+        return $this->db->delete(self::table(), ['id' => $this->id]);
     }
 
     /**
@@ -239,15 +241,6 @@ class Vote extends Model
         }
 
         return new Vote($rows[0]);
-    }
-
-    /**
-     * Returns table name
-     * @return string
-     */
-    public static function table(): string
-    {
-        return self::TABLE;
     }
 
     /**

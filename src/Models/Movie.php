@@ -20,7 +20,7 @@ class Movie extends Model
     /**
      * Table Name
      */
-    private const TABLE = 'movies'; // Table Name
+    protected const TABLE = 'movies';
 
     /**
      * @var array|string[]
@@ -61,27 +61,18 @@ class Movie extends Model
     public int $downvotes = 0;
 
     /**
-     * Function that accepts a data array and populates class with values
-     * @param array{
-     *      title?: string,
-     *      description?: string,
-     *      image_link?: string,
-     *      created_at?: string
-     * } $data
-     * * @return void
+     * Sets values
+     *
+     * @param $key
+     * @param $value
+     * @return void
      */
-    protected function fill(array $data): void
+    protected function transform(string $key, mixed $value): mixed
     {
-        foreach ($data as $key => $value) {
-            if (!in_array($key, $this->fillable, true) && !in_array($key, $this->attributes, true)) {
-                continue;
-            }
-
-            if (in_array($key, ['id', 'upvotes', 'downvotes'])) {
-                $this->$key = (int)$value;
-            } elseif ($value !== null) {
-                $this->$key = (string)$value;
-            }
+        if (in_array($key, ['id', 'upvotes', 'downvotes'])) {
+            return  (int)$value;
+        } elseif ($value !== null) {
+            return (string)$value;
         }
     }
 
@@ -93,7 +84,7 @@ class Movie extends Model
     public static function all(): array
     {
         $db = ConnectionManager::get('default');
-        $rows = $db->select(self::TABLE, [], 'upvotes', 'desc' );
+        $rows = $db->select(self::table(), [], 'upvotes', 'desc' );
         return array_map(fn($row) => new Movie($row), $rows);
     }
 
@@ -227,17 +218,6 @@ class Movie extends Model
         }
         $this->downvotes--;
         return $success;
-    }
-
-
-    /**
-     * Returns table name
-     *
-     * @return string
-     */
-    public static function table(): string
-    {
-        return self::TABLE;
     }
 
     /**

@@ -11,7 +11,7 @@ use RuntimeException;
  * Provides core functionality for data handling
  * Child models should define their own $fillable and $attributes variables
  */
-class Model
+abstract class Model
 {
     protected $db;
 
@@ -19,6 +19,8 @@ class Model
      * @var array|string[]
      */
     protected array $fillable = [];
+
+    protected const TABLE = '';
 
     /**
      * @var array|string[]
@@ -46,6 +48,24 @@ class Model
             if (!in_array($key, $this->fillable, true) && !in_array($key, $this->attributes, true)) {
                 continue;
             }
+
+            $this->$key = $this->transform($key, $value);
+            $this->afterFill();
         }
+    }
+
+    protected function afterFill()
+    {
+    }
+
+    protected abstract function transform(string $key, mixed $value);
+
+    public static function table(): string
+    {
+        if (static::TABLE === '') {
+            throw new RuntimeException('Table not defined for ' . static::class);
+        }
+
+        return static::TABLE;
     }
 }
