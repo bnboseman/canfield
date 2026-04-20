@@ -51,14 +51,11 @@ class Vote extends Model
                 case 'vote_type':
                 case 'movie_id':
                     return (int)$value;
-                    break;
                 case 'ip_address':
                     $ip = filter_var($value, FILTER_VALIDATE_IP);
                     return  $ip !== false ? $ip : null;
-                    break;
                 default:
                     return (string)$value;
-                    break;
         }
     }
 
@@ -115,14 +112,15 @@ class Vote extends Model
         if (!self::isValidVote($this->vote_type)) {
             throw new InvalidArgumentException('Invalid vote');
         }
+        $this->getMovie();
 
         // If no existing vote create new vote
         if (!$existing) {
             $this->created_at = $now;
             $this->updated_at = null;
 
-            $this->db->beginTransaction();
             try {
+                $this->db->beginTransaction();
                 $this->create();
 
                 if ($this->vote_type === 1) {
@@ -135,17 +133,16 @@ class Vote extends Model
                     $this->db->rollBack();
                     throw $e;
             }
-
             return true;
         }
 
         // If the vote is the same, we don't have to do anything
-        if ($existing['vote_type'] === $this->vote_type) {
+        if ((int)$existing['vote_type'] === $this->vote_type) {
             throw new RuntimeException('Vote already set');
         }
 
-        $this->db->beginTransaction();
         try {
+            $this->db->beginTransaction();
             // If the vote changed, adjust
             if ($existing['vote_type'] === 1 && $this->vote_type === -1) {
                 $this->movie->decrementUpvotes();
@@ -154,7 +151,6 @@ class Vote extends Model
                 $this->movie->decrementDownvotes();
                 $this->movie->incrementUpvotes();
             }
-
             // update vote
             $this->updated_at = $now;
 
@@ -168,13 +164,11 @@ class Vote extends Model
             if (!$updated) {
                 throw new RuntimeException('Failed to update vote');
             }
-
             $this->db->commit();
         } catch (Exception $e) {
             $this->db->rollBack();
             throw $e;
         }
-
         return true;
     }
 
