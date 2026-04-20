@@ -63,13 +63,14 @@ class Vote extends Model
     }
 
     /**
-     * Runs after fill to set the movie for the vote
+     * Returns movie of the vote
      * @return void
      */
-    protected function afterFill() {
-        if (!empty($this->movie_id)) {
-            $this->movie = Movie::find($this->movie_id);
+    protected function getMovie(): ?Movie {
+        if (!empty($this->movie_id) && empty($this->movie)) {
+            $this->movie =  Movie::find($this->movie_id);
         }
+        return $this->movie;
     }
 
     /**
@@ -219,6 +220,7 @@ class Vote extends Model
 
     public function isMovieSet()
     {
+        $this->getMovie();
         return !is_null($this->movie);
     }
 
@@ -257,7 +259,7 @@ class Vote extends Model
         return [
             'id' => $this->id,
             'vote_type' => $this->vote_type,
-            'movie' => $this->movie->toArray(),
+            'movie' => $this->getMovie()->toArray(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

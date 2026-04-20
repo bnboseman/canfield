@@ -50,12 +50,7 @@ abstract class Model
             }
 
             $this->$key = $this->transform($key, $value);
-            $this->afterFill();
         }
-    }
-
-    protected function afterFill()
-    {
     }
 
     protected abstract function transform(string $key, mixed $value);
