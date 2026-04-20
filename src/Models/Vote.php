@@ -9,6 +9,8 @@ use InvalidArgumentException;
 
 /**
  *  Vote model
+ *
+ * Represents a vote and provides methods for interacting
  */
 class Vote extends Model
 {
